@@ -8,7 +8,6 @@ import { COLLECTORS } from "./items";
 import { AMIS } from "../config";
 
 export interface CollectorStackProps extends cdk.StackProps {
-  artifactBucket: s3.Bucket;
 }
 
 export class CollectorStack extends cdk.Stack {
@@ -55,10 +54,9 @@ export class CollectorStack extends cdk.Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy')
     );
     bucket.grantReadWrite(role);
-    props.artifactBucket.grantRead(role);
 
     for (const item of COLLECTORS) {
-      this.createEC2Instance(item, vpc, securityGroup, role, bucket, props.artifactBucket);
+      this.createEC2Instance(item, vpc, securityGroup, role, bucket);
     }
   }
 
@@ -68,51 +66,47 @@ export class CollectorStack extends cdk.Stack {
     securityGroup: ec2.SecurityGroup,
     role: iam.Role,
     bucket: s3.Bucket,
-    artifactBucket: s3.Bucket,
   ) {
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
         'echo "Running user data..."',
-        'sudo apt update -y',
-        'sudo apt install -y awscli',
-        'mkdir -p /opt/myapp',
-        // Install CloudWatchAgent
-        'sudo apt install -y amazon-cloudwatch-agent',
-        // Do not modify these indents. You will regret it.
-        `cat <<EOF > /tmp/cloudwatch-config.json
-{
-  "logs": {
-    "logs_collected": {
-      "files": {
-        "collect_list": [
-          {
-            "file_path": "/var/lib/docker/containers/*/*.log",
-            "log_group_name": "/collector/logs",
-            "log_stream_name": "{instance_id}",
-            "timestamp_format": "%Y-%m-%d %H:%M:%S"
-          }
-        ]
-      }
-    }
-  }
-}
-EOF`,
-
-        // Start CloudWatchAgent with the specified config
-        'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/tmp/cloudwatch-config.json',
-
-        `aws s3 cp s3://${artifactBucket.bucketName}/gnome-orchestrator-${CollectorStack.ORCHESTRATOR_VERSION}.jar /opt/orchestrator/gnome-orchestrator.jar`,
-        'chmod +x /opt/orchestrator/gnome-orchestrator.jar',
-        'sudo systemctl restart orchestrator',
-
-        // `$(aws ecr get-login --no-include-email --region ${this.region})`,
-        // `sudo docker pull ${imageUri}`,
-        // `sudo docker run --shm-size=2gb \
-        // -e "MAIN_CLASS=${item[1]}" \
-        // -e "PROPERTIES_PATH=collector.properties" \
-        // -e "LISTING_ID=${item[0]}" \
-        // -e "BUCKET_NAME=${bucket.bucketName}" \
-        // -d ` + imageUri
+        'echo "Writing CloudWatch Agent configuration..."',
+        'sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json > /dev/null <<\'EOF\'',
+        '{',
+        '  "logs": {',
+        '    "logs_collected": {',
+        '      "files": {',
+        '        "collect_list": [',
+        '          {',
+        '            "file_path": "/home/ubuntu/java.log",',
+        '            "log_group_name": "/collector/logs",',
+        '            "log_stream_name": "{instance_id}",',
+        '            "timestamp_format": "%Y-%m-%d %H:%M:%S"',
+        '          }',
+        '        ]',
+        '      }',
+        '    },',
+        '  }',
+        '}',
+        'EOF',
+        'echo "Starting CloudWatch Agent..."',
+        'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s',
+        'echo "Retrieving Maven credentials from Secrets Manager..."',
+        'SECRET=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id my-maven-creds --query SecretString --output text)',
+        'export MAVEN_USERNAME=$(echo "$SECRET" | jq -r \'.GITHUB_ACTOR\')',
+        'export MAVEN_PASSWORD=$(echo "$SECRET" | jq -r \'.GITHUB_TOKEN\')',
+        'echo "Maven username: $MAVEN_USERNAME"',
+        'echo "Downloading the JAR from Maven..."',
+        `mvn dependency:get -DrepoUrl=https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator -Dartifact=group.gnometrading:gnome-orchestrator:${CollectorStack.ORCHESTRATOR_VERSION}:jar -Dtransitive=false -Dmaven.username="$MAVEN_USERNAME" -Dmaven.password="$MAVEN_PASSWORD"`,
+        `JAR_PATH="/home/ubuntu/.m2/repository/group/gnometrading/gnome-orchestrator/${CollectorStack.ORCHESTRATOR_VERSION}/gnome-orchestrator-${CollectorStack.ORCHESTRATOR_VERSION}.jar"`,
+        'while [ ! -f "$JAR_PATH" ]; do echo "Waiting for JAR..."; sleep 5; done',
+        `export PROPERTIES_PATH="collector.properties"`,
+        `export LISTING_ID="${item[0]}"`,
+        `export BUCKET_NAME="${bucket.bucketName}"`,
+        'echo "Starting the Java application..."',
+        `MAIN_CLASS="${item[1]}"`,
+        'nohup java -cp "$JAR_PATH" ${MAIN_CLASS} > /home/ubuntu/java.log 2>&1 &',
+        'echo "Application started successfully."'
     );
 
     // TODO: Only have a keypair on dev
@@ -126,7 +120,7 @@ EOF`,
           ec2.InstanceSize.MICRO
       ),
       machineImage: ec2.MachineImage.genericLinux({
-        [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17"],
+        [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
       }),
       instanceName: `MarketCollectorListingId${item[0]}`,
       securityGroup,

@@ -17,9 +17,10 @@ export const ACCOUNTS = {
   },
 }
 
-export const GITHUB_REPO = "gnome-trading-group/gnome-orchestrator";
+export const GITHUB_REPO = "gnome-trading-group/gnome-orchestrator-cdk";
 export const GITHUB_BRANCH = "main";
 
 export const AMIS = {
   'Ubuntu TLS 24.0 Azul JDK 17': 'ami-00989c0a54cd2c609',
+  'Ubuntu TLS 24.0 Azul JDK 17 v2': 'ami-046c22ede26993b90',
 }
