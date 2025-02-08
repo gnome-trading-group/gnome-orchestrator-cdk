@@ -13,7 +13,7 @@ export interface CollectorStackProps extends cdk.StackProps {
 
 export class CollectorStack extends cdk.Stack {
 
-  private static ORCHESTRATOR_VERSION = "1.0.0";
+  private static ORCHESTRATOR_VERSION = "1.0.1";
 
   constructor(scope: Construct, id: string, props: CollectorStackProps) {
     super(scope, id, props);
@@ -102,15 +102,13 @@ export class CollectorStack extends cdk.Stack {
         'export MAVEN_PASSWORD=$(echo "$SECRET" | jq -r \'.GITHUB_TOKEN\')',
         'echo "Maven username: $MAVEN_USERNAME"',
         'echo "Downloading the JAR from Maven..."',
-        `mvn dependency:get -DrepoUrl=https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator -Dartifact=group.gnometrading:gnome-orchestrator:${CollectorStack.ORCHESTRATOR_VERSION}:jar -Dtransitive=false -Dmaven.username="$MAVEN_USERNAME" -Dmaven.password="$MAVEN_PASSWORD"`,
-        `JAR_PATH="/home/ubuntu/.m2/repository/group/gnometrading/gnome-orchestrator/${CollectorStack.ORCHESTRATOR_VERSION}/gnome-orchestrator-${CollectorStack.ORCHESTRATOR_VERSION}.jar"`,
-        'while [ ! -f "$JAR_PATH" ]; do echo "Waiting for JAR..."; sleep 5; done',
+        `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${CollectorStack.ORCHESTRATOR_VERSION}/gnome-orchestrator-${CollectorStack.ORCHESTRATOR_VERSION}.jar"`,
         `export PROPERTIES_PATH="collector.properties"`,
         `export LISTING_ID="${item[0]}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
         'echo "Starting the Java application..."',
         `MAIN_CLASS="${item[1]}"`,
-        'nohup java -cp "$JAR_PATH" ${MAIN_CLASS} > /home/ubuntu/java.log 2>&1 &',
+        'nohup java -cp gnome-orchestrator.jar ${MAIN_CLASS} > /home/ubuntu/java.log 2>&1 &',
         'echo "Application started successfully."'
     );
 
