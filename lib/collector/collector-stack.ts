@@ -56,11 +56,7 @@ export class CollectorStack extends cdk.Stack {
     );
     bucket.grantReadWrite(role);
 
-    const githubSecret = secretsmanager.Secret.fromSecretCompleteArn(
-      this,
-      'ExternalMavenSecret',
-      'arn:aws:secretsmanager:us-east-1:043309336849:secret:GITHUB_MAVEN-DTtXEt'
-    );
+    const githubSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GithubMaven', 'GITHUB_MAVEN');
     githubSecret.grantRead(role);
 
     for (const item of COLLECTORS) {
@@ -78,7 +74,7 @@ export class CollectorStack extends cdk.Stack {
   ) {
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
-        'echo "Running user data..."',
+        'echo "Running user data.."',
         'echo "Writing CloudWatch Agent configuration..."',
         'sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json > /dev/null <<\'EOF\'',
         '{',
