@@ -3,11 +3,13 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { COLLECTORS } from "./items";
 import { AMIS } from "../config";
 
 export interface CollectorStackProps extends cdk.StackProps {
+  githubSecret: secretsmanager.ISecret;
 }
 
 export class CollectorStack extends cdk.Stack {
@@ -54,9 +56,10 @@ export class CollectorStack extends cdk.Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy')
     );
     bucket.grantReadWrite(role);
+    props.githubSecret.grantRead(role);
 
     for (const item of COLLECTORS) {
-      this.createEC2Instance(item, vpc, securityGroup, role, bucket);
+      this.createEC2Instance(item, vpc, securityGroup, role, bucket, props.githubSecret);
     }
   }
 
@@ -66,6 +69,7 @@ export class CollectorStack extends cdk.Stack {
     securityGroup: ec2.SecurityGroup,
     role: iam.Role,
     bucket: s3.Bucket,
+    githubSecret: secretsmanager.ISecret,
   ) {
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
@@ -92,7 +96,7 @@ export class CollectorStack extends cdk.Stack {
         'echo "Starting CloudWatch Agent..."',
         'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s',
         'echo "Retrieving Maven credentials from Secrets Manager..."',
-        'SECRET=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id my-maven-creds --query SecretString --output text)',
+        `SECRET=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id ${githubSecret.secretArn} --query SecretString --output text)`,
         'export MAVEN_USERNAME=$(echo "$SECRET" | jq -r \'.GITHUB_ACTOR\')',
         'export MAVEN_PASSWORD=$(echo "$SECRET" | jq -r \'.GITHUB_TOKEN\')',
         'echo "Maven username: $MAVEN_USERNAME"',
