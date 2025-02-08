@@ -9,7 +9,6 @@ import { COLLECTORS } from "./items";
 import { AMIS } from "../config";
 
 export interface CollectorStackProps extends cdk.StackProps {
-  githubSecret: secretsmanager.ISecret;
 }
 
 export class CollectorStack extends cdk.Stack {
@@ -56,10 +55,16 @@ export class CollectorStack extends cdk.Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy')
     );
     bucket.grantReadWrite(role);
-    props.githubSecret.grantRead(role);
+
+    const githubSecret = secretsmanager.Secret.fromSecretCompleteArn(
+      this,
+      'ExternalMavenSecret',
+      'arn:aws:secretsmanager:us-east-1:043309336849:secret:GITHUB_MAVEN-DTtXEt'
+    );
+    githubSecret.grantRead(role);
 
     for (const item of COLLECTORS) {
-      this.createEC2Instance(item, vpc, securityGroup, role, bucket, props.githubSecret);
+      this.createEC2Instance(item, vpc, securityGroup, role, bucket, githubSecret);
     }
   }
 
