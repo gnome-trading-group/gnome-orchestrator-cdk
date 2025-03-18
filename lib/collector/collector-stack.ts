@@ -90,7 +90,7 @@ export class CollectorStack extends cdk.Stack {
         '          }',
         '        ]',
         '      }',
-        '    },',
+        '    }',
         '  }',
         '}',
         'EOF',
@@ -105,9 +105,11 @@ export class CollectorStack extends cdk.Stack {
         `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${CollectorStack.ORCHESTRATOR_VERSION}/gnome-orchestrator-${CollectorStack.ORCHESTRATOR_VERSION}.jar"`,
         `export PROPERTIES_PATH="collector.properties"`,
         `export LISTING_ID="${item[0]}"`,
+        `export MAIN_CLASS="${item[1]}"`,
+        `export SCHEMA_TYPE="${item[2]}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
+        `export IDENTIFIER={instance_id}`,
         'echo "Starting the Java application..."',
-        `MAIN_CLASS="${item[1]}"`,
         'nohup java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -cp gnome-orchestrator.jar ${MAIN_CLASS} > /home/ubuntu/java.log 2>&1 &',
         'echo "Application started successfully."'
     );
