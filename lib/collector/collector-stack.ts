@@ -13,7 +13,7 @@ export interface CollectorStackProps extends cdk.StackProps {
 
 export class CollectorStack extends cdk.Stack {
 
-  private static ORCHESTRATOR_VERSION = "1.0.3";
+  private static ORCHESTRATOR_VERSION = "1.0.4";
 
   constructor(scope: Construct, id: string, props: CollectorStackProps) {
     super(scope, id, props);
@@ -108,7 +108,7 @@ export class CollectorStack extends cdk.Stack {
         `export MAIN_CLASS="${item[1]}"`,
         `export SCHEMA_TYPE="${item[2]}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
-        `export IDENTIFIER={instance_id}`,
+        `export IDENTIFIER=$(ec2metadata --instance-id)`,
         'echo "Starting the Java application..."',
         'nohup java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -cp gnome-orchestrator.jar ${MAIN_CLASS} > /home/ubuntu/java.log 2>&1 &',
         'echo "Application started successfully."'
