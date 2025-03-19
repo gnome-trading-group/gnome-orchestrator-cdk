@@ -113,7 +113,7 @@ export class CollectorStack extends cdk.Stack {
         `export SCHEMA_TYPE="${item.schemaType}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
         `export IDENTIFIER=$(ec2metadata --instance-id)`,
-        'echo "Starting the Java application..."',
+        'echo "Starting the Java application...."',
         'nohup java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -cp gnome-orchestrator.jar ${MAIN_CLASS} > /home/ubuntu/java.log 2>&1 &',
         'echo "Application started successfully."'
     );
