@@ -1,4 +1,10 @@
-export const COLLECTORS = [
-  [2, "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", "mbp-10"], // BTC
-  [2, "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", "mbp-10"], // BTC
+export interface CollectorInstance {
+  listingId: number;
+  mainClass: string;
+  schemaType: string;
+  replicas: number;
+}
+
+export const COLLECTORS: CollectorInstance[] = [
+  { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 },
 ]

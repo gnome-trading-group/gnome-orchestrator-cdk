@@ -5,7 +5,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
-import { COLLECTORS } from "./items";
+import { CollectorInstance, COLLECTORS } from "./items";
 import { AMIS } from "../config";
 
 export interface CollectorStackProps extends cdk.StackProps {
@@ -59,18 +59,22 @@ export class CollectorStack extends cdk.Stack {
     const githubSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GithubMaven', 'GITHUB_MAVEN');
     githubSecret.grantRead(role);
 
+    // TODO: Only have a keypair on dev
+    const keyPair = ec2.KeyPair.fromKeyPairName(this, 'DefaultKeyPair', 'DefaultKeyPair');
+
     for (const item of COLLECTORS) {
-      this.createEC2Instance(item, vpc, securityGroup, role, bucket, githubSecret);
+      this.createEC2Instance(item, vpc, securityGroup, role, bucket, githubSecret, keyPair);
     }
   }
 
   private createEC2Instance(
-    item: any[],
+    item: CollectorInstance,
     vpc: ec2.Vpc,
     securityGroup: ec2.SecurityGroup,
     role: iam.Role,
     bucket: s3.Bucket,
     githubSecret: secretsmanager.ISecret,
+    keyPair?: ec2.IKeyPair,
   ) {
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
@@ -104,9 +108,9 @@ export class CollectorStack extends cdk.Stack {
         'echo "Downloading the JAR from Maven..."',
         `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${CollectorStack.ORCHESTRATOR_VERSION}/gnome-orchestrator-${CollectorStack.ORCHESTRATOR_VERSION}.jar"`,
         `export PROPERTIES_PATH="collector.properties"`,
-        `export LISTING_ID="${item[0]}"`,
-        `export MAIN_CLASS="${item[1]}"`,
-        `export SCHEMA_TYPE="${item[2]}"`,
+        `export LISTING_ID="${item.listingId}"`,
+        `export MAIN_CLASS="${item.mainClass}"`,
+        `export SCHEMA_TYPE="${item.schemaType}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
         `export IDENTIFIER=$(ec2metadata --instance-id)`,
         'echo "Starting the Java application..."',
@@ -114,26 +118,23 @@ export class CollectorStack extends cdk.Stack {
         'echo "Application started successfully."'
     );
 
-    // TODO: Only have a keypair on dev
-    const keyPair = ec2.KeyPair.fromKeyPairName(this, 'DefaultKeyPair', 'DefaultKeyPair');
-
-    const instance = new ec2.Instance(this, `MarketCollectorListingId${item[0]}-v5`, {
-      vpc,
-      userData,
-      instanceType: ec2.InstanceType.of(
-          ec2.InstanceClass.T2,
-          ec2.InstanceSize.MICRO
-      ),
-      machineImage: ec2.MachineImage.genericLinux({
-        [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
-      }),
-      instanceName: `MarketCollectorListingId${item[0]}`,
-      securityGroup,
-      role,
-      keyPair,
-      userDataCausesReplacement: true,
-    });
-
-    return instance;
+    for (var i = 0; i < item.replicas; i++) {
+      new ec2.Instance(this, `MarketCollectorListingId${item.listingId}-${i}-v5`, {
+        vpc,
+        userData,
+        instanceType: ec2.InstanceType.of(
+            ec2.InstanceClass.T2,
+            ec2.InstanceSize.MICRO
+        ),
+        machineImage: ec2.MachineImage.genericLinux({
+          [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
+        }),
+        instanceName: `MarketCollectorListingId${item.listingId}-${i}`,
+        securityGroup,
+        role,
+        keyPair,
+        userDataCausesReplacement: true,
+      });
+    }
   }
 }
