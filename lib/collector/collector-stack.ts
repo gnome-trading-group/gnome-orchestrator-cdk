@@ -13,7 +13,7 @@ export interface CollectorStackProps extends cdk.StackProps {
 
 export class CollectorStack extends cdk.Stack {
 
-  private static ORCHESTRATOR_VERSION = "1.0.8";
+  private static ORCHESTRATOR_VERSION = "1.0.10";
 
   constructor(scope: Construct, id: string, props: CollectorStackProps) {
     super(scope, id, props);
