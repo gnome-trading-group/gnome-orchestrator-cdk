@@ -54,13 +54,13 @@ export class OrchestratorPipelineStack extends cdk.Stack {
     });
 
     const dev = new AppStage(this, "Dev", CONFIGS[Stage.DEV]!);
-    const staging = new AppStage(this, "Staging", CONFIGS[Stage.STAGING]!);
+    // const staging = new AppStage(this, "Staging", CONFIGS[Stage.STAGING]!);
     const prod = new AppStage(this, "Prod", CONFIGS[Stage.PROD]!);
 
     pipeline.addStage(dev);
-    pipeline.addStage(staging, {
-      pre: [new pipelines.ManualApprovalStep('ApproveStaging')],
-    });
+    // pipeline.addStage(staging, {
+    //   pre: [new pipelines.ManualApprovalStep('ApproveStaging')],
+    // });
     pipeline.addStage(prod, {
       pre: [new pipelines.ManualApprovalStep('ApproveProd')],
     });
