@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as pipelines from "aws-cdk-lib/pipelines";
+import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from "constructs";
 import { CollectorStack } from "./stacks/collector-stack";
 import { Stage } from "@gnome-trading-group/gnome-shared-cdk";
@@ -34,15 +35,21 @@ export class OrchestratorPipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const npmSecret = secrets.Secret.fromSecretNameV2(this, 'NPMToken', 'npm-token');
+
     const pipeline = new pipelines.CodePipeline(this, "OrchestratorPipeline", {
       crossAccountKeys: true,
       pipelineName: "OrchestratorPipeline",
       synth: new pipelines.ShellStep("deploy", {
         input: pipelines.CodePipelineSource.gitHub(GITHUB_REPO, GITHUB_BRANCH),
-        commands: [ 
+        commands: [
+          'echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc',
           "npm ci",
           "npx cdk synth"
         ],
+        env: {
+          NPM_TOKEN: npmSecret.secretValue.unsafeUnwrap()
+        }
       }),
     });
 
@@ -57,5 +64,9 @@ export class OrchestratorPipelineStack extends cdk.Stack {
     pipeline.addStage(prod, {
       pre: [new pipelines.ManualApprovalStep('ApproveProd')],
     });
+
+    pipeline.buildPipeline();
+    npmSecret.grantRead(pipeline.synthProject.role!!);
+    npmSecret.grantRead(pipeline.pipeline.role);
   }
 }
