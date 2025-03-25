@@ -3,23 +3,24 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as cw from 'aws-cdk-lib/aws-cloudwatch';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
-import { CollectorInstance, COLLECTORS } from "./items";
-import { AMIS } from "../config";
+import { AMIS, OrchestratorConfig, CollectorInstance } from "../config";
+import { MonitoringStack } from "./monitoring-stack";
 
 export interface CollectorStackProps extends cdk.StackProps {
+  config: OrchestratorConfig;
+  monitoringStack: MonitoringStack;
 }
 
 export class CollectorStack extends cdk.Stack {
-
-  private static ORCHESTRATOR_VERSION = "1.0.12";
 
   constructor(scope: Construct, id: string, props: CollectorStackProps) {
     super(scope, id, props);
 
     const bucket = new s3.Bucket(this, 'CollectorBucket', {
-      bucketName: 'market-data-collector',
+      bucketName: props.config.collectorBucketName,
     });
 
     const vpc = new ec2.Vpc(this, 'CollectorVPC', {
@@ -37,6 +38,7 @@ export class CollectorStack extends cdk.Stack {
       logGroupName: '/collector/logs',
       retention: logs.RetentionDays.ONE_WEEK,
     });
+    this.buildMonitoring(logGroup, props.monitoringStack);
 
     const securityGroup = new ec2.SecurityGroup(this, 'CollectorSecurityGroup', {
       vpc,
@@ -62,10 +64,46 @@ export class CollectorStack extends cdk.Stack {
     // TODO: Only have a keypair on dev
     const keyPair = ec2.KeyPair.fromKeyPairName(this, 'DefaultKeyPair', 'DefaultKeyPair');
 
-    for (const item of COLLECTORS) {
-      this.createEC2Instance(item, vpc, securityGroup, role, bucket, githubSecret, keyPair);
+    for (const item of props.config.collectors) {
+      this.createEC2Instance(item, vpc, securityGroup, role, bucket, githubSecret, props.config.collectorOrchestratorVersion, props.config.allowCollectorSSH ? keyPair : undefined);
     }
   }
+
+  private buildMonitoring(
+    logGroup: logs.LogGroup,
+    monitoringStack: MonitoringStack,
+  ) {
+    const filter = logGroup.addMetricFilter('ErrorMetricFilter', {
+      filterPattern: logs.FilterPattern.anyTerm('Exception', 'ERROR'),
+      metricName: 'ErrorCount',
+      metricNamespace: 'CollectorLogs',
+    });
+
+    const metric = filter.metric({
+      statistic: 'sum',
+      period: cdk.Duration.minutes(1),
+    });
+
+    const alarm = new cw.Alarm(this, 'CollectorErrorAlarm', {
+      metric,
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      alarmDescription: 'Triggers when there are errors in any collector log streams',
+    });
+
+    monitoringStack.subscribeSlackAlarm(alarm);
+    monitoringStack.dashboard.addWidgets(new cw.GraphWidget({
+      title: "Collector Log Errors",
+      width: 12,
+      left: [
+        metric,
+      ],
+      leftAnnotations: [
+        alarm.toAnnotation(),
+      ],
+    }));
+ }
 
   private createEC2Instance(
     item: CollectorInstance,
@@ -74,6 +112,7 @@ export class CollectorStack extends cdk.Stack {
     role: iam.Role,
     bucket: s3.Bucket,
     githubSecret: secretsmanager.ISecret,
+    orchestratorVersion: string,
     keyPair?: ec2.IKeyPair,
   ) {
     const userData = ec2.UserData.forLinux();
@@ -106,7 +145,7 @@ export class CollectorStack extends cdk.Stack {
         'export MAVEN_PASSWORD=$(echo "$SECRET" | jq -r \'.GITHUB_TOKEN\')',
         'echo "Maven username: $MAVEN_USERNAME"',
         'echo "Downloading the JAR from Maven..."',
-        `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${CollectorStack.ORCHESTRATOR_VERSION}/gnome-orchestrator-${CollectorStack.ORCHESTRATOR_VERSION}.jar"`,
+        `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${orchestratorVersion}/gnome-orchestrator-${orchestratorVersion}.jar"`,
         `export PROPERTIES_PATH="collector.properties"`,
         `export LISTING_ID="${item.listingId}"`,
         `export MAIN_CLASS="${item.mainClass}"`,

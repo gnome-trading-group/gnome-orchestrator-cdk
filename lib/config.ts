@@ -1,19 +1,62 @@
-export const ACCOUNTS = {
-  'dev': {
-    account: '443370708724',
-    region: 'us-east-1',
+import { GnomeAccount, Stage } from "@gnome-trading-group/gnome-shared-cdk";
+
+export interface CollectorInstance {
+  listingId: number;
+  mainClass: string;
+  schemaType: string;
+  replicas: number;
+}
+
+export interface OrchestratorConfig {
+  account: GnomeAccount;
+
+  // Slack settings
+  slackWorkspaceId: string;
+  slackChannelConfigurationName: string;
+  slackChannelId: string;
+
+  // Collector settings
+  collectorBucketName: string;
+  allowCollectorSSH: boolean;
+  collectors: CollectorInstance[];
+  collectorOrchestratorVersion: string;
+}
+
+const defaultConfig = {
+  slackWorkspaceId: "T08K71WNHSR",
+
+  collectorBucketName: 'market-data-collector',
+  allowCollectorSSH: false,
+  collectors: [
+    { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // BTC
+    { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // ETH
+  ],
+  collectorOrchestratorVersion: "1.0.12",
+}
+
+export const CONFIGS: { [stage in Stage]?:  OrchestratorConfig } = {
+  [Stage.DEV]: {
+    ...defaultConfig,
+    account: GnomeAccount.InfraDev,
+
+    slackChannelConfigurationName: "gnome-alerts-dev",
+    slackChannelId: "C08KX2GAUE4",
+
+    allowCollectorSSH: true,
   },
-  'staging': {
-    account: '774305600313',
-    region: 'us-east-1',
+  [Stage.STAGING]: {
+    ...defaultConfig,
+    account: GnomeAccount.InfraStaging,
+
+    slackChannelConfigurationName: "gnome-alerts-staging",
+    slackChannelId: "C08KL9PGAQZ",
   },
-  'prod': {
-    account: '241533121172',
-    region: 'us-east-1',
-  },
-  'pipelines': {
-    account: '043309336849',
-    region: 'us-east-1',
+  [Stage.PROD]: {
+    ...defaultConfig,
+    account: GnomeAccount.InfraProd,
+
+    slackChannelConfigurationName: "gnome-alerts-prod",
+    slackChannelId: "C08KD27QZKN",
   },
 }
 
