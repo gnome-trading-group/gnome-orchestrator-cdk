@@ -20,10 +20,10 @@ export class CollectorStack extends cdk.Stack {
     super(scope, id, props);
 
     const rawBucket = new s3.Bucket(this, 'CollectorRawBucket', {
-      bucketName: 'market-data-collector-raw',
+      bucketName: 'market-data-raw',
     });
     const finalBucket = new s3.Bucket(this, 'CollectorFinalBucket', {
-      bucketName: 'market-data-collector',
+      bucketName: 'market-data-consolidated',
     });
 
     const vpc = new ec2.Vpc(this, 'CollectorVPC', {
