@@ -19,8 +19,11 @@ export class CollectorStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: CollectorStackProps) {
     super(scope, id, props);
 
-    const bucket = new s3.Bucket(this, 'CollectorBucket', {
-      bucketName: props.config.collectorBucketName,
+    const rawBucket = new s3.Bucket(this, 'CollectorRawBucket', {
+      bucketName: 'market-data-collector-raw',
+    });
+    const finalBucket = new s3.Bucket(this, 'CollectorFinalBucket', {
+      bucketName: 'market-data-collector',
     });
 
     const vpc = new ec2.Vpc(this, 'CollectorVPC', {
@@ -56,7 +59,7 @@ export class CollectorStack extends cdk.Stack {
     role.addManagedPolicy(
       iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy')
     );
-    bucket.grantReadWrite(role);
+    rawBucket.grantReadWrite(role);
 
     const githubSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GithubMaven', 'GITHUB_MAVEN');
     githubSecret.grantRead(role);
@@ -65,7 +68,7 @@ export class CollectorStack extends cdk.Stack {
     const keyPair = ec2.KeyPair.fromKeyPairName(this, 'DefaultKeyPair', 'DefaultKeyPair');
 
     for (const item of props.config.collectors) {
-      this.createEC2Instance(item, vpc, securityGroup, role, bucket, githubSecret, props.config.collectorOrchestratorVersion, props.config.allowCollectorSSH ? keyPair : undefined);
+      this.createEC2Instance(item, vpc, securityGroup, role, rawBucket, githubSecret, props.config.collectorOrchestratorVersion, props.config.allowCollectorSSH ? keyPair : undefined);
     }
   }
 

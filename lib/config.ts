@@ -16,7 +16,6 @@ export interface OrchestratorConfig {
   slackChannelId: string;
 
   // Collector settings
-  collectorBucketName: string;
   allowCollectorSSH: boolean;
   collectors: CollectorInstance[];
   collectorOrchestratorVersion: string;
@@ -25,7 +24,6 @@ export interface OrchestratorConfig {
 const defaultConfig = {
   slackWorkspaceId: "T08K71WNHSR",
 
-  collectorBucketName: 'market-data-collector',
   allowCollectorSSH: false,
   collectors: [
     { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // BTC

@@ -15,7 +15,7 @@ export class SlackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SlackStackProps) {
     super(scope, id, props);
 
-    const role = new iam.Role(this, 'CahtBotRole', {
+    const role = new iam.Role(this, 'ChatBotRole', {
       assumedBy: new iam.ServicePrincipal('chatbot.amazonaws.com'),
       description: 'Role for AWS ChatBot',
       managedPolicies: [
