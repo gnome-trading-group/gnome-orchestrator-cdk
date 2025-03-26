@@ -29,7 +29,7 @@ const defaultConfig = {
     { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // BTC
     { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // ETH
   ],
-  collectorOrchestratorVersion: "1.0.13",
+  collectorOrchestratorVersion: "1.0.14",
 }
 
 export const CONFIGS: { [stage in Stage]?:  OrchestratorConfig } = {

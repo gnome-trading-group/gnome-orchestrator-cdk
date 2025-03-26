@@ -7,3 +7,5 @@ node_modules
 .cdk.staging
 cdk.out
 
+# Ignore Dockerfiles produced dynamically
+/**/constructs/**/Dockerfile

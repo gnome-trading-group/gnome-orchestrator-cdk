@@ -8,6 +8,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { AMIS, OrchestratorConfig, CollectorInstance } from "../config";
 import { MonitoringStack } from "./monitoring-stack";
+import { OrchestratorLambda } from "../constructs/lambda";
 
 export interface CollectorStackProps extends cdk.StackProps {
   config: OrchestratorConfig;
@@ -70,6 +71,14 @@ export class CollectorStack extends cdk.Stack {
     for (const item of props.config.collectors) {
       this.createEC2Instance(item, vpc, securityGroup, role, rawBucket, githubSecret, props.config.collectorOrchestratorVersion, props.config.allowCollectorSSH ? keyPair : undefined);
     }
+
+    const aggregatorLambda = new OrchestratorLambda(this, 'CollectorAggregatorLambda', {
+      orchestratorVersion: props.config.collectorOrchestratorVersion,
+      classPath: 'group.gnometrading.collectors.AggregatorOrchestrator',
+      lambdaName: 'CollectorAggregatorLambda',
+    });
+
+    // TODO: Run the aggregator lambda every 6 hours -- or until i have more money to afford more lambdas
   }
 
   private buildMonitoring(
