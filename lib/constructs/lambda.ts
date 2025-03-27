@@ -59,9 +59,6 @@ export class OrchestratorLambda extends Construct {
      
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir),
-      environment: {
-        AWS_REGION: cdk.Aws.REGION,
-      },
       memorySize: props.memorySize ?? 4096,
       timeout: cdk.Duration.minutes(props.timeout ?? 10),
       role,
