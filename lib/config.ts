@@ -26,8 +26,8 @@ const defaultConfig = {
 
   allowCollectorSSH: false,
   collectors: [
-    { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // BTC
-    { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // ETH
+    { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 0 }, // BTC
+    { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 0 }, // ETH
   ],
   collectorOrchestratorVersion: "1.0.14",
 }
