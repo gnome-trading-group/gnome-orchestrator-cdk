@@ -10,6 +10,7 @@ export interface OrchestratorLambdaProps {
   orchestratorVersion: string;
   classPath: string;
   lambdaName: string;
+  region: string;
   memorySize?: number;
   timeout?: number;
 }
@@ -38,7 +39,7 @@ export class OrchestratorLambda extends Construct {
       ENV MAVEN_SECRET_ARN=$MAVEN_SECRET_ARN
 
       RUN echo "Fetching Maven credentials..." && \
-          CREDENTIALS=$(aws secretsmanager get-secret-value --secret-id ${githubSecret.secretArn} --query SecretString --output text) && \
+          CREDENTIALS=$(aws secretsmanager get-secret-value --region ${props.region} --secret-id ${githubSecret.secretArn} --query SecretString --output text) && \
           MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
           MAVEN_PASSWORD=$(echo $CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
           echo "Setting up Maven authentication..." && \
@@ -58,6 +59,9 @@ export class OrchestratorLambda extends Construct {
      
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir),
+      environment: {
+        AWS_REGION: cdk.Aws.REGION,
+      },
       memorySize: props.memorySize ?? 4096,
       timeout: cdk.Duration.minutes(props.timeout ?? 10),
       role,

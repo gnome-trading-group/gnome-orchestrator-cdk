@@ -76,6 +76,7 @@ export class CollectorStack extends cdk.Stack {
       orchestratorVersion: props.config.collectorOrchestratorVersion,
       classPath: 'group.gnometrading.collectors.AggregatorOrchestrator',
       lambdaName: 'CollectorAggregatorLambda',
+      region: props.config.account.region,
     });
 
     // TODO: Run the aggregator lambda every 6 hours -- or until i have more money to afford more lambdas
