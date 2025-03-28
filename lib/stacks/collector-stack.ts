@@ -72,12 +72,12 @@ export class CollectorStack extends cdk.Stack {
       this.createEC2Instance(item, vpc, securityGroup, role, rawBucket, githubSecret, props.config.collectorOrchestratorVersion, props.config.allowCollectorSSH ? keyPair : undefined);
     }
 
-    const aggregatorLambda = new OrchestratorLambda(this, 'CollectorAggregatorLambda', {
-      orchestratorVersion: props.config.collectorOrchestratorVersion,
-      classPath: 'group.gnometrading.collectors.AggregatorOrchestrator',
-      lambdaName: 'CollectorAggregatorLambda',
-      region: props.config.account.region,
-    });
+    // const aggregatorLambda = new OrchestratorLambda(this, 'CollectorAggregatorLambda', {
+    //   orchestratorVersion: props.config.collectorOrchestratorVersion,
+    //   classPath: 'group.gnometrading.collectors.AggregatorOrchestrator',
+    //   lambdaName: 'CollectorAggregatorLambda',
+    //   region: props.config.account.region,
+    // });
 
     // TODO: Run the aggregator lambda every 6 hours -- or until i have more money to afford more lambdas
   }
