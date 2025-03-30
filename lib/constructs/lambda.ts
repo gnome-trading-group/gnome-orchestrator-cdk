@@ -59,7 +59,7 @@ export class OrchestratorLambda extends Construct {
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildSecrets: {
-          'aws': 'src=$HOME/.aws/credentials'
+          'aws': 'src=~/.aws/credentials'
         }
       }),
       memorySize: props.memorySize ?? 4096,
