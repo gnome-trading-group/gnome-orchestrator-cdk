@@ -32,9 +32,9 @@ export class OrchestratorLambda extends Construct {
 
       RUN yum install -y wget jq
 
-      ARG CREDENTIALS
-      ENV CREDENTIALS=$CREDENTIALS
-      RUN echo $CREDENTIALS
+      ARG MAVEN_CREDENTIALS
+      ENV MAVEN_CREDENTIALS=$MAVEN_CREDENTIALS
+      RUN echo $MAVEN_CREDENTIALS
 
       RUN echo "Fetching Maven credentials..." && \
           MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
@@ -52,8 +52,8 @@ export class OrchestratorLambda extends Construct {
 
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
-        buildArgs: {
-          CREDENTIALS: process.env.MAVEN_CREDENTIALS || '',
+        buildSecrets: {
+          MAVEN_CREDENTIALS: 'type=env',
         }
       }),
       memorySize: props.memorySize ?? 4096,
