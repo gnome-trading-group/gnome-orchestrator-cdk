@@ -32,8 +32,8 @@ export class OrchestratorLambda extends Construct {
 
       RUN yum install -y wget jq
 
-      ARG MAVEN_CREDENTIALS
-      ENV MAVEN_CREDENTIALS=$MAVEN_CREDENTIALS
+      RUN --mount=type=secret,id=MAVEN_CREDENTIALS \
+        export MAVEN_CREDENTIALS=$(cat /run/secrets/MAVEN_CREDENTIALS)
       RUN echo $MAVEN_CREDENTIALS
       RUN echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_ACTOR\'
 
