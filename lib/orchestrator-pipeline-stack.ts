@@ -55,6 +55,17 @@ export class OrchestratorPipelineStack extends cdk.Stack {
         }
       }),
       assetPublishingCodeBuildDefaults: {
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          version: "0.2",
+          phases: {
+            pre_build: {
+              commands: [
+                "echo 'Environment Variables in CodeBuild:'",
+                "env", // This prints all environment variables
+              ],
+            },
+          },
+        }),
         buildEnvironment: {
           environmentVariables: {
             MAVEN_CREDENTIALS: {
