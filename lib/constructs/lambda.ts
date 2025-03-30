@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
+import { execSync } from 'child_process';
 
 export interface OrchestratorLambdaProps {
   orchestratorVersion: string;
@@ -35,10 +36,11 @@ export class OrchestratorLambda extends Construct {
 
       RUN yum install -y maven aws-cli jq
 
-      RUN --mount=type=secret,id=aws,target=/root/.aws/credentials ls /root/.aws && cat /root/.aws/credentials
+      ARG CREDENTIALS
+      ENV CREDENTIALS=$CREDENTIALS
+      RUN echo $CREDENTIALS
 
-      RUN --mount=type=secret,id=aws,target=/root/.aws/credentials \
-          CREDENTIALS=$(aws secretsmanager get-secret-value --region ${props.region} --secret-id ${githubSecret.secretArn} --query SecretString --output text) && \
+      RUN echo "Fetching Maven credentials..." && \
           MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
           MAVEN_PASSWORD=$(echo $CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
           echo "Setting up Maven authentication..." && \
@@ -55,11 +57,18 @@ export class OrchestratorLambda extends Construct {
       description: `Execution role for ${props.lambdaName}`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
+
+    const credentials = execSync(
+      `aws secretsmanager get-secret-value --region ${props.region} --secret-id ${githubSecret.secretArn} --query SecretString --output text`,
+      {
+          encoding: 'utf8',
+      },
+    ).trim();
      
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
-        buildSecrets: {
-          'aws': 'src=~/.aws/credentials'
+        buildArgs: {
+          CREDENTIALS: credentials
         }
       }),
       memorySize: props.memorySize ?? 4096,
