@@ -39,7 +39,7 @@ export class OrchestratorLambda extends Construct {
       RUN echo "Fetching Maven credentials..." && \
           MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
           MAVEN_PASSWORD=$(echo $CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
-          wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O /var/task/lambda.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${orchestratorVersion}/gnome-orchestrator-${orchestratorVersion}.jar
+          wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O /var/task/lambda.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${props.orchestratorVersion}/gnome-orchestrator-${props.orchestratorVersion}.jar
       
       CMD ["${props.classPath}::handleRequest"]
     `;
