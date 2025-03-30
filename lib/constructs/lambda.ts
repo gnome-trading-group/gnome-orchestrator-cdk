@@ -54,7 +54,7 @@ export class OrchestratorLambda extends Construct {
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildArgs: {
-          MAVEN_CREDENTIALS: "$MAVEN_CREDENTIALS",
+          MAVEN_CREDENTIALS: process.env.MAVEN_CREDENTIALS || 'unknown',
         },
       }),
       memorySize: props.memorySize ?? 4096,
