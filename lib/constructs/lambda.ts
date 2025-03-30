@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Construct } from 'constructs';
@@ -22,6 +23,7 @@ export class OrchestratorLambda extends Construct {
     super(scope, id);
 
     const dockerDir = path.join(__dirname, `${props.lambdaName}-docker`);
+    const githubSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GithubMaven', 'GITHUB_MAVEN');
 
     if (!fs.existsSync(dockerDir)) {
       fs.mkdirSync(dockerDir);
@@ -54,7 +56,7 @@ export class OrchestratorLambda extends Construct {
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildArgs: {
-          MAVEN_CREDENTIALS: process.env.MAVEN_CREDENTIALS || 'unknown',
+          MAVEN_CREDENTIALS: `$(aws secretsmanager get-secret-value --region us-east-1 --secret-id ${githubSecret.secretArn} --query SecretString --output text)`,
         },
       }),
       memorySize: props.memorySize ?? 4096,
