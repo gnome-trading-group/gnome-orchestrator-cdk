@@ -52,15 +52,15 @@ export class OrchestratorPipelineStack extends cdk.Stack {
           NPM_TOKEN: npmSecret.secretValue.unsafeUnwrap()
         }
       }),
-      // assetPublishingCodeBuildDefaults: {
-      //   rolePolicy: [
-      //     new iam.PolicyStatement({
-      //       effect: iam.Effect.ALLOW,
-      //       actions: ["secretsmanager:*"],
-      //       resources: ["*"],
-      //     })
-      //   ]
-      // }
+      assetPublishingCodeBuildDefaults: {
+        rolePolicy: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ["secretsmanager:*"],
+            resources: ["*"],
+          })
+        ]
+      }
     });
 
     const dev = new AppStage(this, "Dev", CONFIGS[Stage.DEV]!);
