@@ -55,15 +55,7 @@ export class OrchestratorPipelineStack extends cdk.Stack {
         }
       }),
       assetPublishingCodeBuildDefaults: {
-        rolePolicy: [
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: ["secretsmanager:*"],
-            resources: ["*"],
-          })
-        ],
         buildEnvironment: {
-          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_ARM_3,
           environmentVariables: {
             MAVEN_CREDENTIALS: {
               type: codebuild.BuildEnvironmentVariableType.SECRETS_MANAGER,

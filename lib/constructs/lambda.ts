@@ -30,7 +30,7 @@ export class OrchestratorLambda extends Construct {
     const dockerfileContent = `
       FROM public.ecr.aws/lambda/java:17
 
-      RUN yum install -y maven aws-cli jq
+      RUN yum install -y wget jq
 
       ARG CREDENTIALS
       ENV CREDENTIALS=$CREDENTIALS
@@ -39,12 +39,8 @@ export class OrchestratorLambda extends Construct {
       RUN echo "Fetching Maven credentials..." && \
           MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
           MAVEN_PASSWORD=$(echo $CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
-          echo "Setting up Maven authentication..." && \
-          mkdir -p /root/.m2 && \
-          echo "<settings><servers><server><id>github</id><username>$MAVEN_USERNAME</username><password>$MAVEN_PASSWORD</password></server></servers></settings>" > /root/.m2/settings.xml
+          wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O /var/task/lambda.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${orchestratorVersion}/gnome-orchestrator-${orchestratorVersion}.jar
       
-      RUN mvn dependency:get -Dartifact=group.gnometrading:gnome-orchestrator:${props.orchestratorVersion} -Ddest=/var/task/lambda.jar
-
       CMD ["${props.classPath}::handleRequest"]
     `;
     fs.writeFileSync(path.join(dockerDir, 'Dockerfile'), dockerfileContent);
