@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as pipelines from "aws-cdk-lib/pipelines";
+import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from "constructs";
@@ -59,7 +60,10 @@ export class OrchestratorPipelineStack extends cdk.Stack {
             actions: ["secretsmanager:*"],
             resources: ["*"],
           })
-        ]
+        ],
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_ARM_3,
+        },
       }
     });
 

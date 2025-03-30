@@ -35,17 +35,9 @@ export class OrchestratorLambda extends Construct {
 
       RUN yum install -y maven aws-cli jq
 
-      ARG AWS_ACCESS_KEY_ID
-      ARG AWS_SECRET_ACCESS_KEY
-      ARG AWS_SESSION_TOKEN
+      RUN --mount=type=secret,id=aws,target=/root/.aws/credentials ls /root/.aws && cat /root/.aws/credentials
 
-      ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-      ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-      ENV AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
-
-      RUN echo "AWS_ACCESS_KEY_ID and $AWS_SECRET_ACCESS_KEY and $AWS_SESSION_TOKEN"
-
-      RUN echo "Fetching Maven credentials..." && \
+      RUN --mount=type=secret,id=aws,target=/root/.aws/credentials \
           CREDENTIALS=$(aws secretsmanager get-secret-value --region ${props.region} --secret-id ${githubSecret.secretArn} --query SecretString --output text) && \
           MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
           MAVEN_PASSWORD=$(echo $CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
@@ -66,11 +58,9 @@ export class OrchestratorLambda extends Construct {
      
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
-        buildArgs: {
-          AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',
-          AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
-          AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN || '',
-        },
+        buildSecrets: {
+          'aws': 'src=$HOME/.aws/credentials'
+        }
       }),
       memorySize: props.memorySize ?? 4096,
       timeout: cdk.Duration.minutes(props.timeout ?? 10),
