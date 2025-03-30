@@ -58,8 +58,7 @@ export class OrchestratorPipelineStack extends cdk.Stack {
         buildEnvironment: {
           environmentVariables: {
             MAVEN_CREDENTIALS: {
-              type: codebuild.BuildEnvironmentVariableType.SECRETS_MANAGER,
-              value: githubSecret.secretArn,
+              value: githubSecret.secretValue.unsafeUnwrap(),
             }
           }
         },
