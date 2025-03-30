@@ -35,10 +35,11 @@ export class OrchestratorLambda extends Construct {
       ARG MAVEN_CREDENTIALS
       ENV MAVEN_CREDENTIALS=$MAVEN_CREDENTIALS
       RUN echo $MAVEN_CREDENTIALS
+      RUN echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_ACTOR\'
 
       RUN echo "Fetching Maven credentials..." && \
-          MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
-          MAVEN_PASSWORD=$(echo $CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
+          MAVEN_USERNAME=$(echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
+          MAVEN_PASSWORD=$(echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
           wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O /var/task/lambda.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${props.orchestratorVersion}/gnome-orchestrator-${props.orchestratorVersion}.jar"
       
       CMD ["${props.classPath}::handleRequest"]
@@ -54,7 +55,7 @@ export class OrchestratorLambda extends Construct {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildSecrets: {
           MAVEN_CREDENTIALS: 'type=env',
-        }
+        },
       }),
       memorySize: props.memorySize ?? 4096,
       timeout: cdk.Duration.minutes(props.timeout ?? 10),
