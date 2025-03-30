@@ -3,9 +3,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
-import { execSync } from 'child_process';
 
 export interface OrchestratorLambdaProps {
   orchestratorVersion: string;
@@ -28,8 +26,6 @@ export class OrchestratorLambda extends Construct {
     if (!fs.existsSync(dockerDir)) {
       fs.mkdirSync(dockerDir);
     }
-
-    const githubSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GithubMaven', 'GITHUB_MAVEN');
 
     const dockerfileContent = `
       FROM public.ecr.aws/lambda/java:17
@@ -58,17 +54,10 @@ export class OrchestratorLambda extends Construct {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
 
-    const credentials = execSync(
-      `aws secretsmanager get-secret-value --region ${props.region} --secret-id ${githubSecret.secretArn} --query SecretString --output text`,
-      {
-          encoding: 'utf8',
-      },
-    ).trim();
-     
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildArgs: {
-          CREDENTIALS: credentials
+          CREDENTIALS: process.env.MAVEN_CREDENTIALS || '',
         }
       }),
       memorySize: props.memorySize ?? 4096,
