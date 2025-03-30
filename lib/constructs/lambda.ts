@@ -75,7 +75,5 @@ export class OrchestratorLambda extends Construct {
       timeout: cdk.Duration.minutes(props.timeout ?? 10),
       role,
     });
-
-    githubSecret.grantRead(this.lambdaInstance);
   }
 }
