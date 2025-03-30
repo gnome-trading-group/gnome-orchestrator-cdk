@@ -43,6 +43,8 @@ export class OrchestratorLambda extends Construct {
       ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
       ENV AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 
+      RUN echo "AWS_ACCESS_KEY_ID and $AWS_SECRET_ACCESS_KEY and $AWS_SESSION_TOKEN"
+
       RUN echo "Fetching Maven credentials..." && \
           CREDENTIALS=$(aws secretsmanager get-secret-value --region ${props.region} --secret-id ${githubSecret.secretArn} --query SecretString --output text) && \
           MAVEN_USERNAME=$(echo $CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
