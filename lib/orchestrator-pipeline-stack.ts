@@ -56,7 +56,7 @@ export class OrchestratorPipelineStack extends cdk.Stack {
       }),
       assetPublishingCodeBuildDefaults: {
         buildEnvironment: {
-          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_ARM_3,
+          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
           environmentVariables: {
             MAVEN_CREDENTIALS: {
               value: githubSecret.secretValue.unsafeUnwrap(),
