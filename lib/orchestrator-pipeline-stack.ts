@@ -55,18 +55,8 @@ export class OrchestratorPipelineStack extends cdk.Stack {
         }
       }),
       assetPublishingCodeBuildDefaults: {
-        partialBuildSpec: codebuild.BuildSpec.fromObject({
-          version: "0.2",
-          phases: {
-            pre_build: {
-              commands: [
-                "echo 'Environment Variables in CodeBuild:'",
-                "env", // This prints all environment variables
-              ],
-            },
-          },
-        }),
         buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_ARM_3,
           environmentVariables: {
             MAVEN_CREDENTIALS: {
               value: githubSecret.secretValue.unsafeUnwrap(),
