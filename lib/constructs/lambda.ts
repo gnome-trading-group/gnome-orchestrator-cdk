@@ -35,7 +35,7 @@ export class OrchestratorLambda extends Construct {
       RUN yum install -y wget jq
 
       ARG MAVEN_CREDENTIALS
-      ENV MAVEN_CREDENTIALS=$MAVEN_CREDENTIALS
+      ENV MAVEN_CREDENTIALS=$\{MAVEN_CREDENTIALS}
       RUN echo $MAVEN_CREDENTIALS
       RUN echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_ACTOR\'
 
@@ -56,7 +56,7 @@ export class OrchestratorLambda extends Construct {
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildArgs: {
-          MAVEN_CREDENTIALS: `$(aws secretsmanager get-secret-value --region us-east-1 --secret-id ${githubSecret.secretArn} --query SecretString --output text)`,
+          MAVEN_CREDENTIALS: "$MAVEN_CREDENTIALS",
         },
       }),
       memorySize: props.memorySize ?? 4096,
