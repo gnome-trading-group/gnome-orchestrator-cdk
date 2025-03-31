@@ -30,7 +30,7 @@ export class OrchestratorLambda extends Construct {
     const dockerfileContent = `
       FROM --platform=linux/amd64 public.ecr.aws/lambda/java:17
 
-      RUN apt-get install -y wget jq
+      RUN yum install -y wget jq
 
       RUN --mount=type=secret,id=MAVEN_CREDENTIALS \
         export MAVEN_CREDENTIALS=$(cat /run/secrets/MAVEN_CREDENTIALS) && \
