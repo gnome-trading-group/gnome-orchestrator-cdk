@@ -57,7 +57,7 @@ export class OrchestratorLambda extends Construct {
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildSecrets: {
-          MAVEN_CREDENTIALS: 'env=HOME',
+          MAVEN_CREDENTIALS: 'env=MAVEN_CREDENTIALS',
         },
         buildArgs: {
           DOCKER_BUILDKIT: "1",
