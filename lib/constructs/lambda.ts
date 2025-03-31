@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as ecr from "aws-cdk-lib/aws-ecr-assets";
 import * as path from 'path';
 import * as fs from 'fs';
 import { Construct } from 'constructs';
@@ -30,7 +31,7 @@ export class OrchestratorLambda extends Construct {
     const dockerfileContent = `
       FROM --platform=linux/amd64 public.ecr.aws/lambda/java:17
 
-      RUN yum install -y wget jq
+      RUN apt-get install -y wget jq
 
       RUN --mount=type=secret,id=MAVEN_CREDENTIALS \
         export MAVEN_CREDENTIALS=$(cat /run/secrets/MAVEN_CREDENTIALS) && \
@@ -49,6 +50,7 @@ export class OrchestratorLambda extends Construct {
 
     this.lambdaInstance = new lambda.DockerImageFunction(this, props.lambdaName, {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
+        platform: ecr.Platform.LINUX_AMD64,
         buildSecrets: {
           MAVEN_CREDENTIALS: 'env=MAVEN_CREDENTIALS',
         },
