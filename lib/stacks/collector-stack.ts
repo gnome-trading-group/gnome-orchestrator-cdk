@@ -21,7 +21,7 @@ export class CollectorStack extends cdk.Stack {
     super(scope, id, props);
 
     const rawBucket = new s3.Bucket(this, 'CollectorRawBucket', {
-      bucketName: 'market-data-raw',
+      bucketName: 'market-data',
     });
     const finalBucket = new s3.Bucket(this, 'CollectorFinalBucket', {
       bucketName: 'market-data-consolidated',
