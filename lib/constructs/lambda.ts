@@ -36,10 +36,8 @@ export class OrchestratorLambda extends Construct {
         export MAVEN_CREDENTIALS=$(cat /run/secrets/MAVEN_CREDENTIALS) && \
         MAVEN_USERNAME=$(echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
         MAVEN_PASSWORD=$(echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
-        wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O /var/task/lambda.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${props.orchestratorVersion}/gnome-orchestrator-${props.orchestratorVersion}.jar"
+        wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O $\{LAMBDA_TASK_ROOT}/lib/ "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${props.orchestratorVersion}/gnome-orchestrator-${props.orchestratorVersion}.jar"
 
-      RUN cd $\{LAMBDA_TASK_ROOT} && jar -xf /var/task/lambda.jar
-      
       CMD ["${props.classPath}::handleRequest"]
     `;
     fs.writeFileSync(path.join(dockerDir, 'Dockerfile'), dockerfileContent);
