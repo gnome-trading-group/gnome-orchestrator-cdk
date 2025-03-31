@@ -33,7 +33,7 @@ export class OrchestratorLambda extends Construct {
       RUN yum install -y wget jq
 
       RUN --mount=type=secret,id=MAVEN_CREDENTIALS \
-        export MAVEN_CREDENTIALS=$(cat /run/secrets/MAVEN_CREDENTIALS) &&\
+        export MAVEN_CREDENTIALS=$(cat /run/secrets/MAVEN_CREDENTIALS) && \
         MAVEN_USERNAME=$(echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_ACTOR\') && \
         MAVEN_PASSWORD=$(echo $MAVEN_CREDENTIALS | jq -r \'.GITHUB_TOKEN\') && \
         wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O /var/task/lambda.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${props.orchestratorVersion}/gnome-orchestrator-${props.orchestratorVersion}.jar"
@@ -51,9 +51,6 @@ export class OrchestratorLambda extends Construct {
       code: lambda.DockerImageCode.fromImageAsset(dockerDir, {
         buildSecrets: {
           MAVEN_CREDENTIALS: 'env=MAVEN_CREDENTIALS',
-        },
-        buildArgs: {
-          DOCKER_BUILDKIT: "1",
         },
       }),
       memorySize: props.memorySize ?? 4096,
