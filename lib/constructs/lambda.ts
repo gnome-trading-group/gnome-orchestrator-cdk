@@ -28,7 +28,7 @@ export class OrchestratorLambda extends Construct {
     }
 
     const dockerfileContent = `
-      FROM public.ecr.aws/lambda/java:17
+      FROM --platform=linux/amd64 public.ecr.aws/lambda/java:17
 
       RUN yum install -y wget jq
 
