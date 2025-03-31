@@ -53,7 +53,7 @@ export class OrchestratorLambda extends Construct {
           MAVEN_CREDENTIALS: 'env=MAVEN_CREDENTIALS',
         },
       }),
-      memorySize: props.memorySize ?? 4096,
+      memorySize: props.memorySize ?? 3008,
       timeout: cdk.Duration.minutes(props.timeout ?? 10),
       role,
     });
