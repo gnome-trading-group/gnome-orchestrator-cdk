@@ -162,7 +162,6 @@ export class CollectorStack extends cdk.Stack {
         `export PROPERTIES_PATH="collector.properties"`,
         `export LISTING_ID="${item.listingId}"`,
         `export MAIN_CLASS="${item.mainClass}"`,
-        `export SCHEMA_TYPE="${item.schemaType}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
         `export IDENTIFIER=$(ec2metadata --instance-id)`,
         'echo "Starting the Java application...."',

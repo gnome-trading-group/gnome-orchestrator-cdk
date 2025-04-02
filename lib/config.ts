@@ -3,7 +3,6 @@ import { GnomeAccount, Stage } from "@gnome-trading-group/gnome-shared-cdk";
 export interface CollectorInstance {
   listingId: number;
   mainClass: string;
-  schemaType: string;
   replicas: number;
 }
 
@@ -26,10 +25,10 @@ const defaultConfig = {
 
   allowCollectorSSH: false,
   collectors: [
-    { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // BTC
-    { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", schemaType: "mbp-10", replicas: 2 }, // ETH
+    { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", replicas: 2 }, // BTC
+    { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator", replicas: 2 }, // ETH
   ],
-  collectorOrchestratorVersion: "1.0.15",
+  collectorOrchestratorVersion: "1.0.16",
 }
 
 export const CONFIGS: { [stage in Stage]?:  OrchestratorConfig } = {
