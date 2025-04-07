@@ -8,7 +8,6 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { AMIS, OrchestratorConfig, CollectorInstance } from "../config";
 import { MonitoringStack } from "./monitoring-stack";
-import { OrchestratorLambda } from "../constructs/lambda";
 
 export interface CollectorStackProps extends cdk.StackProps {
   config: OrchestratorConfig;
@@ -61,6 +60,7 @@ export class CollectorStack extends cdk.Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy')
     );
     rawBucket.grantReadWrite(role);
+    finalBucket.grantReadWrite(role);
 
     const githubSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GithubMaven', 'GITHUB_MAVEN');
     githubSecret.grantRead(role);
@@ -169,7 +169,7 @@ export class CollectorStack extends cdk.Stack {
       machineImage: ec2.MachineImage.genericLinux({
         [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
       }),
-      instanceName: `MarketCollectorListingId${item.listingId}}`,
+      instanceName: `MarketCollectorListingId${item.listingId}`,
       securityGroup,
       role,
       keyPair,
