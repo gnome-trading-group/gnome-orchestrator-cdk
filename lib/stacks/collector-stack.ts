@@ -69,17 +69,8 @@ export class CollectorStack extends cdk.Stack {
     const keyPair = ec2.KeyPair.fromKeyPairName(this, 'DefaultKeyPair', 'DefaultKeyPair');
 
     for (const item of props.config.collectors) {
-      this.createEC2Instance(item, vpc, securityGroup, role, rawBucket, githubSecret, props.config.collectorOrchestratorVersion, props.config.allowCollectorSSH ? keyPair : undefined);
+      this.createEC2Instance(item, vpc, securityGroup, role, finalBucket, githubSecret, props.config.collectorOrchestratorVersion, props.config.allowCollectorSSH ? keyPair : undefined);
     }
-
-    const aggregatorLambda = new OrchestratorLambda(this, 'CollectorAggregatorLambda', {
-      orchestratorVersion: props.config.collectorOrchestratorVersion,
-      classPath: 'group.gnometrading.collectors.AggregatorOrchestrator',
-      lambdaName: 'CollectorAggregatorLambda',
-      region: props.config.account.region,
-    });
-
-    // TODO: Run the aggregator lambda every 6 hours -- or until i have more money to afford more lambdas
   }
 
   private buildMonitoring(
@@ -157,35 +148,32 @@ export class CollectorStack extends cdk.Stack {
         'export MAVEN_USERNAME=$(echo "$SECRET" | jq -r \'.GITHUB_ACTOR\')',
         'export MAVEN_PASSWORD=$(echo "$SECRET" | jq -r \'.GITHUB_TOKEN\')',
         'echo "Maven username: $MAVEN_USERNAME"',
-        'echo "Downloading the JAR from Maven...."',
+        'echo "Downloading the JAR from Maven..."',
         `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${orchestratorVersion}/gnome-orchestrator-${orchestratorVersion}.jar"`,
         `export PROPERTIES_PATH="collector.properties"`,
         `export LISTING_ID="${item.listingId}"`,
         `export MAIN_CLASS="${item.mainClass}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
-        `export IDENTIFIER=$(ec2metadata --instance-id)`,
         'echo "Starting the Java application...."',
         'nohup java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -cp gnome-orchestrator.jar ${MAIN_CLASS} > /home/ubuntu/java.log 2>&1 &',
         'echo "Application started successfully."'
     );
 
-    for (var i = 0; i < item.replicas; i++) {
-      new ec2.Instance(this, `MarketCollectorListingId${item.listingId}-${i}-v5`, {
-        vpc,
-        userData,
-        instanceType: ec2.InstanceType.of(
-            ec2.InstanceClass.T2,
-            ec2.InstanceSize.MICRO
-        ),
-        machineImage: ec2.MachineImage.genericLinux({
-          [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
-        }),
-        instanceName: `MarketCollectorListingId${item.listingId}-${i}`,
-        securityGroup,
-        role,
-        keyPair,
-        userDataCausesReplacement: true,
-      });
-    }
+    new ec2.Instance(this, `MarketCollectorListingId${item.listingId}-v6`, {
+      vpc,
+      userData,
+      instanceType: ec2.InstanceType.of(
+          ec2.InstanceClass.T2,
+          ec2.InstanceSize.MICRO
+      ),
+      machineImage: ec2.MachineImage.genericLinux({
+        [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
+      }),
+      instanceName: `MarketCollectorListingId${item.listingId}}`,
+      securityGroup,
+      role,
+      keyPair,
+      userDataCausesReplacement: true,
+    });
   }
 }
