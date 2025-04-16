@@ -24,7 +24,8 @@ const defaultConfig = {
 
   allowCollectorSSH: false,
   collectors: [
-    { listingIds: [1, 2, 3], mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+    { listingIds: [1, 2], mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+    { listingIds: [3, 4], mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
   ],
   collectorOrchestratorVersion: "1.0.21",
 }
