@@ -164,7 +164,7 @@ export class CollectorStack extends cdk.Stack {
       userData,
       instanceType: ec2.InstanceType.of(
           ec2.InstanceClass.T2,
-          ec2.InstanceSize.NANO,
+          ec2.InstanceSize.MICRO,
       ),
       machineImage: ec2.MachineImage.genericLinux({
         [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
