@@ -148,7 +148,7 @@ export class CollectorStack extends cdk.Stack {
         'export MAVEN_USERNAME=$(echo "$SECRET" | jq -r \'.GITHUB_ACTOR\')',
         'export MAVEN_PASSWORD=$(echo "$SECRET" | jq -r \'.GITHUB_TOKEN\')',
         'echo "Maven username: $MAVEN_USERNAME"',
-        'echo "Downloading the JAR from Maven..."',
+        'echo "Downloading the JAR from Maven...."',
         `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${orchestratorVersion}/gnome-orchestrator-${orchestratorVersion}.jar"`,
         `export PROPERTIES_PATH="collector.properties"`,
         `export LISTING_ID="${item.listingId}"`,
