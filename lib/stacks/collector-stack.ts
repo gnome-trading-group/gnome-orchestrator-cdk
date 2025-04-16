@@ -151,7 +151,7 @@ export class CollectorStack extends cdk.Stack {
         'echo "Downloading the JAR from Maven...."',
         `wget --user=$MAVEN_USERNAME --password=$MAVEN_PASSWORD -O gnome-orchestrator.jar "https://maven.pkg.github.com/gnome-trading-group/gnome-orchestrator/group/gnometrading/gnome-orchestrator/${orchestratorVersion}/gnome-orchestrator-${orchestratorVersion}.jar"`,
         `export PROPERTIES_PATH="collector.properties"`,
-        `export LISTING_ID="${item.listingId}"`,
+        `export LISTING_IDS="${item.listingIds.join(',')}"`,
         `export MAIN_CLASS="${item.mainClass}"`,
         `export BUCKET_NAME="${bucket.bucketName}"`,
         'echo "Starting the Java application...."',
@@ -159,7 +159,8 @@ export class CollectorStack extends cdk.Stack {
         'echo "Application started successfully."'
     );
 
-    new ec2.Instance(this, `MarketCollectorListingId${item.listingId}-v6`, {
+    const id = `MarketCollectorListings(${item.listingIds.join('-')})`
+    new ec2.Instance(this, id, {
       vpc,
       userData,
       instanceType: ec2.InstanceType.of(
@@ -169,7 +170,7 @@ export class CollectorStack extends cdk.Stack {
       machineImage: ec2.MachineImage.genericLinux({
         [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
       }),
-      instanceName: `MarketCollectorListingId${item.listingId}`,
+      instanceName: id,
       securityGroup,
       role,
       keyPair,

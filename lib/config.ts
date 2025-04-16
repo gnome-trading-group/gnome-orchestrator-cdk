@@ -1,7 +1,7 @@
 import { GnomeAccount, Stage } from "@gnome-trading-group/gnome-shared-cdk";
 
 export interface CollectorInstance {
-  listingId: number;
+  listingIds: number[];
   mainClass: string;
 }
 
@@ -24,10 +24,9 @@ const defaultConfig = {
 
   allowCollectorSSH: false,
   collectors: [
-    { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" }, // BTC
-    { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" }, // ETH
+    { listingIds: [1, 2, 3], mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
   ],
-  collectorOrchestratorVersion: "1.0.20",
+  collectorOrchestratorVersion: "1.0.21",
 }
 
 export const CONFIGS: { [stage in Stage]?:  OrchestratorConfig } = {
@@ -55,33 +54,33 @@ export const CONFIGS: { [stage in Stage]?:  OrchestratorConfig } = {
     slackChannelId: "C08KD27QZKN",
 
     collectors: [
-      { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 3, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 4, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 5, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 6, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 7, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 8, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 9, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 10, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 11, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 12, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 13, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 14, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 15, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 16, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 17, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 18, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 19, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 20, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 21, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 22, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 23, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 24, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 25, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 26, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
-      { listingId: 27, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 1, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 2, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 3, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 4, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 5, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 6, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 7, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 8, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 9, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 10, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 11, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 12, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 13, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 14, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 15, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 16, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 17, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 18, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 19, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 20, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 21, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 22, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 23, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 24, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 25, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 26, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
+      // { listingId: 27, mainClass: "group.gnometrading.collectors.HyperliquidCollectorOrchestrator" },
     ],
   },
 }
