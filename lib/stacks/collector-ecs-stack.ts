@@ -103,7 +103,7 @@ export class CollectorECSStack extends cdk.Stack {
     const dockerfileContent = `
       FROM azul/zulu-openjdk:17
 
-      RUN yum install -y wget jq
+      RUN apt-get update && apt-get install -y wget
 
       ARG MAIN_CLASS
 
