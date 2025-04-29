@@ -23,7 +23,7 @@ export class CollectorECSStack extends cdk.Stack {
     super(scope, id, props);
 
     const bucket = new s3.Bucket(this, 'CollectorRawBucket', {
-      bucketName: `market-data-${props.config.account.stage}`,
+      bucketName: `gnome-market-data-${props.config.account.stage}`,
     });
 
     const vpc = new ec2.Vpc(this, 'CollectorECSVPC', {
