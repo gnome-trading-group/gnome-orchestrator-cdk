@@ -37,6 +37,7 @@ export class OrchestratorPipelineStack extends cdk.Stack {
 
     const npmSecret = secrets.Secret.fromSecretNameV2(this, 'NPMToken', 'npm-token');
     const githubSecret = secrets.Secret.fromSecretNameV2(this, 'GithubMaven', 'GITHUB_MAVEN');
+    const dockerHubCredentials = secrets.Secret.fromSecretNameV2(this, 'DockerHub', 'docker-hub-credentials');
 
     const pipeline = new pipelines.CodePipeline(this, "OrchestratorPipeline", {
       crossAccountKeys: true,
@@ -52,6 +53,9 @@ export class OrchestratorPipelineStack extends cdk.Stack {
           NPM_TOKEN: npmSecret.secretValue.unsafeUnwrap()
         }
       }),
+      dockerCredentials: [
+        pipelines.DockerCredential.dockerHub(dockerHubCredentials),
+      ],
       assetPublishingCodeBuildDefaults: {
         buildEnvironment: {
           buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
