@@ -2,13 +2,12 @@ import * as cdk from "aws-cdk-lib";
 import * as pipelines from "aws-cdk-lib/pipelines";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from "constructs";
-import { CollectorStack } from "./stacks/collector-stack";
 import { Stage } from "@gnome-trading-group/gnome-shared-cdk";
 import { CONFIGS, GITHUB_BRANCH, GITHUB_REPO, OrchestratorConfig } from "./config";
 import { MonitoringStack } from "./stacks/monitoring-stack";
 import { SlackStack } from "./stacks/slack-stack";
+import { CollectorECSStack } from "./stacks/collector-ecs-stack";
 
 
 class AppStage extends cdk.Stage {
@@ -16,17 +15,16 @@ class AppStage extends cdk.Stage {
   constructor(scope: Construct, id: string, config: OrchestratorConfig) {
     super(scope, id, { env: config.account.environment });
 
-    const monitoringStack = new MonitoringStack(this, "MonitoringStack", {
+    const monitoringStack = new MonitoringStack(this, "OrchestratorMonitoringStack", {
       config,
     });
     
-    const collectorStack = new CollectorStack(this, "CollectorStack", {
+    const collectorStack = new CollectorECSStack(this, "OrchestratorCollectorStack", {
       config,
       monitoringStack,
     });
 
-
-    const slackStack = new SlackStack(this, "SlackStack", {
+    const slackStack = new SlackStack(this, "OrchestratorSlackStack", {
       config,
       topics: [monitoringStack.slackSnsTopic],
     });
