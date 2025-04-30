@@ -49,7 +49,10 @@ export class CollectorECSStack extends cdk.Stack {
     });
     bucket.grantReadWrite(taskRole);
 
-    const cluster = new ecs.Cluster(this, 'CollectorECSCluster', { vpc });
+    const cluster = new ecs.Cluster(this, 'CollectorECSCluster', { 
+      clusterName: 'CollectorCluster',
+      vpc,
+    });
 
     cluster.addCapacity('DefaultAutoScalingGroup', {
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
@@ -60,6 +63,7 @@ export class CollectorECSStack extends cdk.Stack {
     });
 
     const taskDef = new ecs.Ec2TaskDefinition(this, 'CollectorTaskDefinition', {
+      family: 'CollectorTaskDefinition',
       networkMode: ecs.NetworkMode.BRIDGE,
       taskRole,
     });
