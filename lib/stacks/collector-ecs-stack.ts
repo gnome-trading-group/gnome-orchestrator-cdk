@@ -6,27 +6,28 @@ import * as ecrAssets from 'aws-cdk-lib/aws-ecr-assets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as cw from 'aws-cdk-lib/aws-cloudwatch';
+import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Construct } from 'constructs';
 import { AMIS, OrchestratorConfig } from "../config";
 import { MonitoringStack } from "./monitoring-stack";
 
-export interface CollectorECSStackProps extends cdk.StackProps {
+export interface CollectorEcsStackProps extends cdk.StackProps {
   config: OrchestratorConfig;
   monitoringStack: MonitoringStack;
 }
 
-export class CollectorECSStack extends cdk.Stack {
+export class CollectorEcsStack extends cdk.Stack {
 
-  constructor(scope: Construct, id: string, props: CollectorECSStackProps) {
+  constructor(scope: Construct, id: string, props: CollectorEcsStackProps) {
     super(scope, id, props);
 
     const bucket = new s3.Bucket(this, 'CollectorRawBucket', {
       bucketName: `gnome-market-data-${props.config.account.stage}`,
     });
 
-    const vpc = new ec2.Vpc(this, 'CollectorECSVPC', {
+    const vpc = new ec2.Vpc(this, 'CollectorEcsVpc', {
       maxAzs: 2,
       natGateways: 0, // Avoid NAT Gateway costs
       subnetConfiguration: [
@@ -37,7 +38,7 @@ export class CollectorECSStack extends cdk.Stack {
       ],
     });
 
-    const ecsLogGroup = new logs.LogGroup(this, 'CollectorECSLogGroup', {
+    const ecsLogGroup = new logs.LogGroup(this, 'CollectorEcsLogGroup', {
       logGroupName: '/ecs/collector',
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       retention: logs.RetentionDays.ONE_WEEK,
@@ -49,18 +50,25 @@ export class CollectorECSStack extends cdk.Stack {
     });
     bucket.grantReadWrite(taskRole);
 
-    const cluster = new ecs.Cluster(this, 'CollectorECSCluster', { 
+    const cluster = new ecs.Cluster(this, 'CollectorEcsCluster', { 
       clusterName: 'CollectorCluster',
       vpc,
     });
 
-    cluster.addCapacity('DefaultAutoScalingGroup', {
+    const asg = new autoscaling.AutoScalingGroup(this, 'CollectorEcsAsg', {
+      vpc,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
-      desiredCapacity: 1,
-      machineImage: ec2.MachineImage.genericLinux({
-        [this.region]: AMIS["Ubuntu TLS 24.0 Azul JDK 17 v2"],
-      }),
+      machineImage: ecs.EcsOptimizedImage.amazonLinux2(),
+      minCapacity: 0,
+      maxCapacity: 99, // ?
     });
+
+    const capacityProvider = new ecs.AsgCapacityProvider(this, 'CollectorAsgCapacityProvider', {
+      autoScalingGroup: asg,
+      enableManagedTerminationProtection: false,
+    });
+
+    cluster.addAsgCapacityProvider(capacityProvider);
 
     const taskDef = new ecs.Ec2TaskDefinition(this, 'CollectorTaskDefinition', {
       family: 'CollectorTaskDefinition',
@@ -141,7 +149,7 @@ export class CollectorECSStack extends cdk.Stack {
       period: cdk.Duration.minutes(1),
     });
 
-    const alarm = new cw.Alarm(this, 'CollectorECSErrorAlarm', {
+    const alarm = new cw.Alarm(this, 'CollectorEcsErrorAlarm', {
       metric,
       threshold: 1,
       evaluationPeriods: 1,
