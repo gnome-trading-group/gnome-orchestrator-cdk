@@ -6,11 +6,10 @@ import * as ecrAssets from 'aws-cdk-lib/aws-ecr-assets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as cw from 'aws-cdk-lib/aws-cloudwatch';
-import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Construct } from 'constructs';
-import { AMIS, OrchestratorConfig } from "../config";
+import { OrchestratorConfig } from "../config";
 import { MonitoringStack } from "./monitoring-stack";
 
 export interface CollectorEcsStackProps extends cdk.StackProps {
@@ -55,25 +54,11 @@ export class CollectorEcsStack extends cdk.Stack {
       vpc,
     });
 
-    const asg = new autoscaling.AutoScalingGroup(this, 'CollectorEcsAsg', {
-      vpc,
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
-      machineImage: ecs.EcsOptimizedImage.amazonLinux2(),
-      minCapacity: 0,
-      maxCapacity: 99, // ?
-    });
-
-    const capacityProvider = new ecs.AsgCapacityProvider(this, 'CollectorAsgCapacityProvider', {
-      autoScalingGroup: asg,
-      enableManagedTerminationProtection: false,
-    });
-
-    cluster.addAsgCapacityProvider(capacityProvider);
-
-    const taskDef = new ecs.Ec2TaskDefinition(this, 'CollectorTaskDefinition', {
+    const taskDef = new ecs.FargateTaskDefinition(this, 'CollectorTaskDefinition', {
       family: 'CollectorTaskDefinition',
-      networkMode: ecs.NetworkMode.BRIDGE,
       taskRole,
+      memoryLimitMiB: 1024,
+      cpu: 512,
     });
 
     const dockerImage = new ecrAssets.DockerImageAsset(this, 'JavaAppImage', {
@@ -85,8 +70,6 @@ export class CollectorEcsStack extends cdk.Stack {
 
     taskDef.addContainer('CollectorContainer', {
       image: ecs.ContainerImage.fromDockerImageAsset(dockerImage),
-      memoryLimitMiB: 512,
-      cpu: 256,
       portMappings: [{ containerPort: 8080 }],
       environment: {
         MAIN_CLASS: 'group.gnometrading.collectors.HyperliquidCollectorOrchestrator',
@@ -102,6 +85,13 @@ export class CollectorEcsStack extends cdk.Stack {
         retries: 3,
         startPeriod: cdk.Duration.seconds(10),
       },
+    });
+
+    new ecs.FargateService(this, 'CollectorService', {
+      cluster,
+      taskDefinition: taskDef,
+      desiredCount: 0,
+      assignPublicIp: true,
     });
   }
 
