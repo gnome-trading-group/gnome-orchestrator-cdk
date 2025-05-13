@@ -7,7 +7,6 @@ import { Stage } from "@gnome-trading-group/gnome-shared-cdk";
 import { CONFIGS, GITHUB_BRANCH, GITHUB_REPO, OrchestratorConfig } from "./config";
 import { MonitoringStack } from "./stacks/monitoring-stack";
 import { SlackStack } from "./stacks/slack-stack";
-import { CollectorEcsStack } from "./stacks/collector-ecs-stack";
 
 
 class AppStage extends cdk.Stage {
@@ -19,11 +18,6 @@ class AppStage extends cdk.Stage {
       config,
     });
     
-    const collectorStack = new CollectorEcsStack(this, "OrchestratorCollectorStack", {
-      config,
-      monitoringStack,
-    });
-
     const slackStack = new SlackStack(this, "OrchestratorSlackStack", {
       config,
       topics: [monitoringStack.slackSnsTopic],

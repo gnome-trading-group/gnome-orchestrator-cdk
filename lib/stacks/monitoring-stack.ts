@@ -18,7 +18,9 @@ export class MonitoringStack extends cdk.Stack {
     super(scope, id, props);
 
     this.slackSnsTopic = new sns.Topic(this, 'SlackAlarmTopic');
-    this.dashboard = new cw.Dashboard(this, 'MonitoringDashboard');
+    this.dashboard = new cw.Dashboard(this, 'MonitoringDashboard', {
+      dashboardName: 'OrchestratorDashboard',
+    });
   }
 
   addHeading(heading: string) {
